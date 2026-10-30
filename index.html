@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus Power Consumption Estimator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="theme-light">
+  <div class="app-container">
+    
+    <!-- Top Navigation / Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-badge">
+          <i data-lucide="zap"></i>
+        </div>
+        <div>
+          <h1>VoltCampus</h1>
+          <p class="subtitle">Campus Power Consumption & Carbon Footprint Estimator</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="currency-picker">
+          <label for="currencySelect"><i data-lucide="coins"></i> Currency:</label>
+          <select id="currencySelect">
+            <option value="$" selected>USD ($)</option>
+            <option value="₹">INR (₹)</option>
+            <option value="€">EUR (€)</option>
+            <option value="£">GBP (£)</option>
+            <option value="A$">AUD (A$)</option>
+            <option value="C$">CAD (C$)</option>
+          </select>
+        </div>
+        <div class="tariff-input-box">
+          <label for="tariffRate"><i data-lucide="receipt"></i> Tariff / kWh:</label>
+          <input type="number" id="tariffRate" value="0.14" step="0.01" min="0.01" max="100">
+        </div>
+        <button id="themeToggleBtn" class="icon-btn" title="Toggle Theme" aria-label="Toggle Theme">
+          <i data-lucide="moon" id="themeIcon"></i>
+        </button>
+        <button id="printBtn" class="btn btn-secondary" title="Export or Print Report">
+          <i data-lucide="printer"></i>
+          <span>Report</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Preset Selector Banner -->
+    <section class="preset-section">
+      <div class="preset-label">
+        <i data-lucide="sparkles"></i>
+        <span>Quick Campus Presets:</span>
+      </div>
+      <div class="preset-buttons">
+        <button class="preset-btn" data-preset="small">
+          <i data-lucide="school"></i>
+          <div>
+            <strong>Small College</strong>
+            <small>~1,500 Students (Commuter)</small>
+          </div>
+        </button>
+        <button class="preset-btn active" data-preset="medium">
+          <i data-lucide="graduation-cap"></i>
+          <div>
+            <strong>Tech University</strong>
+            <small>~6,500 Students + High Labs</small>
+          </div>
+        </button>
+        <button class="preset-btn" data-preset="large">
+          <i data-lucide="building-2"></i>
+          <div>
+            <strong>Mega Campus</strong>
+            <small>~22,000 Students + Dorms</small>
+          </div>
+        </button>
+        <button class="preset-btn" data-preset="eco">
+          <i data-lucide="leaf"></i>
+          <div>
+            <strong>Green Eco-Campus</strong>
+            <small>Solar Powered + Efficient</small>
+          </div>
+        </button>
+      </div>
+    </section>
+
+    <!-- Main Grid: Controls & Real-Time Dashboard -->
+    <main class="dashboard-grid">
+      
+      <!-- Left Column: Interactive Facility & Zone Inputs -->
+      <section class="inputs-column">
+        
+        <div class="section-title">
+          <div class="title-with-icon">
+            <i data-lucide="sliders-horizontal"></i>
+            <h2>Campus Facilities & Loads</h2>
+          </div>
+          <button id="resetDefaultsBtn" class="text-btn">
+            <i data-lucide="rotate-ccw"></i> Reset
+          </button>
+        </div>
+
+        <div class="zones-accordion">
+          
+          <!-- Zone 1: Academic & Classrooms -->
+          <div class="zone-card active" data-zone="academic">
+            <div class="zone-header">
+              <div class="zone-info">
+                <span class="zone-icon academic-icon"><i data-lucide="book-open"></i></span>
+                <div>
+                  <h3>Academic & Lecture Halls</h3>
+                  <span class="zone-quick-stat" id="stat-academic">0 kWh/day</span>
+                </div>
+              </div>
+              <i data-lucide="chevron-down" class="accordion-arrow"></i>
+            </div>
+            <div class="zone-content">
+              <div class="input-grid">
+                <div class="input-group">
+                  <div class="input-label-row">
+                    <label for="classroomsCount">Classrooms / Lecture Halls</label>
+                    <span class="val-display" id="val-classroomsCount">45</span>
+                  </div>
+                  <input type="range" id="classroomsCount" min="5" max="300" value="45" class="slider">
+                </div>
+
+                <div class="input-group">
+                  <div class="input-label-row">
+                    <label for="academicHours">Operating Hours / Day</label>
+                    <span class="val-display" id="val-academicHours">9 hrs</span>
+                  </div>
+                  <input type="range" id="academicHours" min="4" max="16" value="9" class="slider">
+                </div>
+
+                <div class="input-group">
+                  <div class="input-label-row">
+                    <label for="academicAcCoverage">Air Conditioning / HVAC</label>
+                    <span class="val-display" id="val-academicAcCoverage">60%</span>
+                  </div>
+                  <input type="range" id="academicAcCoverage" min="0" max="100" step="5" value="60" class="slider">
+                </div>
+
+                <div class="input-group">
+                  <label for="academicSmartLighting">Lighting Technology</label>
+                  <select id="academicSmartLighting" class="form-select">
+                    <option value="0.5">Modern LED + Motion Sensors (-50%)</option>
+                    <option value="0.75" selected>Standard LED Fixtures (-25%)</option>
+                    <option value="1.0">Fluorescent Tubes (T8/T12)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Zone 2: Residential Hostels & Dormitories -->
+          <div class="zone-card" data-zone="hostels">
+            <div class="zone-header">
+              <div class="zone-info">
+                <span class="zone-icon hostels-icon"><i data-lucide="bed"></i></span>
+                <div>
+                  <h3>Hostels & Dormitories</h3>
+                  <span class="zone-quick-stat" id="stat-hostels">0 kWh/day</span>
+                </div>
+              </div>
+              <i data-lucide="chevron-down" class="accordion-arrow"></i>
+            </div>
+            <div class="zone-content">
+              <div class="input-grid">
+                <div class="input-group">
+                  <div class="input-label-row">
+                    <label for="hostelResidents">Hostel Residents (Boarders)</label>
+                    <span class="val-display" id="val-hostelResidents">2,400</span>
+                  </div>
+                  <input type="range" id="hostelResidents" min="0" max="15000" step="50" value="2400" class="slider">
+                </div>
+
+                <div class="input-group">
+                  <div class="input-label-row">
+                    <label for="hostelAcPercent">Rooms with Air Conditioning</label>
+                    <span class="val-display" id="val-hostelAcPercent">25%</span>
+                  </div>
+                  <input type="range" id="hostelAcPercent" min="0" max="100" step="5" value="25" class="slider">
+                </div>
+
+                <div class="input-group">
+                  <label for="waterHeatingType">Water Heating System</label>
+                  <select id="waterHeatingType" class="form-select">
+                    <option value="0.2">Solar Thermal + Heat Pumps (Low Grid)</option>
+                    <option value="0.6">Hybrid Solar-Electric Geysers</option>
+                    <option value="1.0" selected>Direct Electric Water Heaters</option>
+                    <option value="0.0">No Water Heating (Ambient/Central Steam)</option>
+                  </select>
+                </div>
+
+                <div class="input-group">
+                  <div class="input-label-row">
+                    <label for="laundryWashers">Commercial Washers & Dryers</label>
+                    <span class="val-display" id="val-laundryWashers">24 units</span>
+                  </div>
+                  <input type="range" id="laundryWashers" min="0" max="150" step="2" value="24" class="slider">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Zone 3: Computer Labs & Research Facilities -->
+          <div class="zone-card" data-zone="labs">
+            <div class="zone-header">
+              <div class="zone-info">
+                <span class="zone-icon labs-icon"><i data-lucide="cpu"></i></span>
+                <div>
+                  <h3>Labs & Server Facilities</h3>
+                  <span class="zone-quick-stat" id="stat-labs">0 kWh/day</span>
+                </div>
+              </div>
+              <i data-lucide="chevron-down" class="accordion-arrow"></i>
+            </div>
+            <div class="zone-content">
+              <div class="input-grid">
+                <div class="input-group">
+                  <div class="input-label-row">
+                    <label for="computerWorkstations">Computer Workstations</label>
+                    <span class="val-display" id="val-computerWorkstations">650</span>
+                  </div>
+                  <input type="range" id="computerWorkstations" min="0" max="3000" step="25" value="650" class="slider">
+                </div>
+
+                <div class="input-group">
+                  <div class="input-label-row">
+                    <label for="labHours">Lab Operational Hours / Day</label>
+                    <span class="val-display" id="val-labHours">12 hrs</span>
+                  </div>
+                  <input type="range" id="labHours" min="4" max="24" value="12" class="slider">
+                </div>
+
+                <div class="input-group">
+                  <div class="input-label-row">
+                    <label for="specializedLabs">Heavy Science/Engineering Labs</label>
+                    <span class="val-display" id="val-specializedLabs">12 labs</span>
+                  </div>
+                  <input type="range" id="specializedLabs" min="0" max="80" value="12" class="slider">
+                  <small class="field-hint">Fume hoods, CNC, autoclaves, chillers (~35 kWh/lab/day)</small>
+                </div>
+
+                <div class="input-group">
+                  <div class="input-label-row">
+                    <label for="serverRacks">Campus Data Center Server Racks</label>
+                    <span class="val-display" id="val-serverRacks">8 racks</span>
+                  </div>
+                  <input type="range" id="serverRacks" min="0" max="50" value="8" class="slider">
+                  <small class="field-hint">24/7 Servers + Dedicated Precision Cooling (~80 kWh/rack/day)</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Zone 4: Administration, Library & Auditoriums -->
+          <div class="zone-card" data-zone="admin">
+            <div class="zone-header">
+              <div class="zone-info">
+                <span class="zone-icon admin-icon"><i data-lucide="landmark"></i></span>
+                <div>
+                  <h3>Library, Admin & Auditoriums</h3>
+                  <span class="zone-quick-stat" id="stat-admin">0 kWh/day</span>
+                </div>
+              </div>
+              <i data-lucide="chevron-down" class="accordion-arrow"></i>
+            </div>
+            <div class="zone-content">
+              <div class="input-grid">
+                <div class="input-group">
+                  <div class="input-label-row">
+                    <label for="libraryArea">Central Library Floor Area</label>
+                    <span class="val-display" id="val-libraryArea">35,000 sq ft</span>
+                  </div>
+                  <input type="range" id="libraryArea" min="5000" max="150000" step="2500" value="35000" class="slider">
+                </div>
+
+                <div class="input-group">
+                  <div class="input-label-row">
+                    <label for="libraryHours">Library Open Hours</label>
+                    <span class="val-display" id="val-libraryHours">14 hrs</span>
+                  </div>
+                  <input type="range" id="libraryHours" min="6" max="24" value="14" class="slider">
+                </div>
+
+                <div class="input-group">
+                  <div class="input-label-row">
+                    <label for="adminStaffCount">Administrative Staff Count</label>
+                    <span class="val-display" id="val-adminStaffCount">180</span>
+                  </div>
+                  <input type="range" id="adminStaffCount" min="10" max="1000" step="10" value="180" class="slider">
+                </div>
+
+                <div class="input-group">
+                  <div class="input-label-row">
+                    <label for="auditoriumCapacity">Main Auditorium Capacity</label>
+                    <span class="val-display" id="val-auditoriumCapacity">1,200 seats</span>
+                  </div>
+                  <input type="range" id="auditoriumCapacity" min="0" max="5000" step="100" value="1200" class="slider">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Zone 5: Dining, Sports & Campus Utilities -->
+          <div class="zone-card" data-zone="utilities">
+            <div class="zone-header">
+              <div class="zone-info">
+                <span class="zone-icon utilities-icon"><i data-lucide="utensils"></i></span>
+                <div>
+                  <h3>Dining, Pumps & Outdoor Utilities</h3>
+                  <span class="zone-quick-stat" id="stat-utilities">0 kWh/day</span>
+                </div>
+              </div>
+              <i data-lucide="chevron-down" class="accordion-arrow"></i>
+            </div>
+            <div class="zone-content">
+              <div class="input-grid">
+                <div class="input-group">
+                  <div class="input-label-row">
+                    <label for="dailyMeals">Daily Dining Hall Meals</label>
+                    <span class="val-display" id="val-dailyMeals">4,500 meals</span>
+                  </div>
+                  <input type="range" id="dailyMeals" min="0" max="25000" step="250" value="4500" class="slider">
+                  <small class="field-hint">Cold rooms, commercial ovens, dishwashers, exhaust fans</small>
+                </div>
+
+                <div class="input-group">
+                  <div class="input-label-row">
+                    <label for="waterPumpsHp">Campus Water & STP Pump Power</label>
+                    <span class="val-display" id="val-waterPumpsHp">40 HP</span>
+                  </div>
+                  <input type="range" id="waterPumpsHp" min="5" max="250" step="5" value="40" class="slider">
+                </div>
+
+                <div class="input-group">
+                  <div class="input-label-row">
+                    <label for="streetlightsCount">Campus Street & Pathway Lights</label>
+                    <span class="val-display" id="val-streetlightsCount">180 poles</span>
+                  </div>
+                  <input type="range" id="streetlightsCount" min="20" max="1000" step="10" value="180" class="slider">
+                </div>
+
+                <div class="input-group">
+                  <label for="sportsFacilityAc">Indoor Sports Complex / Gym</label>
+                  <select id="sportsFacilityAc" class="form-select">
+                    <option value="0">None / Naturally Ventilated</option>
+                    <option value="60" selected>Medium (Gym + Court Lighting ~60 kWh/d)</option>
+                    <option value="180">Large Arena (Indoor AC + Floodlights ~180 kWh/d)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Zone 6: Renewable Energy Generation (Offset) -->
+          <div class="zone-card solar-card" data-zone="solar">
+            <div class="zone-header">
+              <div class="zone-info">
+                <span class="zone-icon solar-icon"><i data-lucide="sun"></i></span>
+                <div>
+                  <h3>On-Campus Solar PV (Clean Energy Offset)</h3>
+                  <span class="zone-quick-stat solar-tag" id="stat-solar">-0 kWh/day</span>
+                </div>
+              </div>
+              <i data-lucide="chevron-down" class="accordion-arrow"></i>
+            </div>
+            <div class="zone-content">
+              <div class="input-grid">
+                <div class="input-group">
+                  <div class="input-label-row">
+                    <label for="solarCapacity">Installed Solar Rooftop / Farm</label>
+                    <span class="val-display solar-text" id="val-solarCapacity">250 kWp</span>
+                  </div>
+                  <input type="range" id="solarCapacity" min="0" max="3000" step="25" value="250" class="slider solar-slider">
+                  <small class="field-hint">1 kWp produces ~4.2 kWh clean electricity per sunny day</small>
+                </div>
+
+                <div class="input-group">
+                  <div class="input-label-row">
+                    <label for="peakSunHours">Avg. Peak Sun Hours / Day</label>
+                    <span class="val-display" id="val-peakSunHours">4.5 hrs</span>
+                  </div>
+                  <input type="range" id="peakSunHours" min="2.5" max="6.5" step="0.1" value="4.5" class="slider">
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div> <!-- /zones-accordion -->
+
+      </section>
+
+      <!-- Right Column: Visual Dashboard, Metrics & Insights -->
+      <section class="results-column">
+        
+        <!-- Summary Headline Cards -->
+        <div class="metrics-grid">
+          
+          <div class="metric-card primary-card">
+            <div class="metric-icon"><i data-lucide="zap"></i></div>
+            <div class="metric-body">
+              <span class="metric-label">Daily Net Consumption</span>
+              <div class="metric-number-wrapper">
+                <span class="metric-value" id="dailyNetKwh">0</span>
+                <span class="metric-unit">kWh/day</span>
+              </div>
+              <span class="metric-subtext" id="dailyGrossSubtext">Gross: 0 kWh | Solar: 0 kWh</span>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-icon bill-icon"><i data-lucide="wallet"></i></div>
+            <div class="metric-body">
+              <span class="metric-label">Estimated Monthly Bill</span>
+              <div class="metric-number-wrapper">
+                <span class="metric-value currency-symbol">$</span>
+                <span class="metric-value" id="monthlyBill">0</span>
+              </div>
+              <span class="metric-subtext" id="annualBillSubtext">Annual: $0</span>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-icon carbon-icon"><i data-lucide="cloud"></i></div>
+            <div class="metric-body">
+              <span class="metric-label">Monthly CO₂ Emissions</span>
+              <div class="metric-number-wrapper">
+                <span class="metric-value" id="monthlyCarbon">0</span>
+                <span class="metric-unit">Tonnes</span>
+              </div>
+              <span class="metric-subtext" id="treesSavedSubtext">Offset: 0 trees/yr needed</span>
+            </div>
+          </div>
+
+          <div class="metric-card grade-card">
+            <div class="metric-icon rating-icon"><i data-lucide="award"></i></div>
+            <div class="metric-body">
+              <span class="metric-label">Green Campus Rating</span>
+              <div class="metric-number-wrapper">
+                <span class="grade-badge" id="campusGrade">B+</span>
+                <span class="grade-label" id="gradeDescription">Eco-Progressive</span>
+              </div>
+              <span class="metric-subtext" id="solarCoverPercent">Solar covers 0% of load</span>
+            </div>
+          </div>
+
+        </div> <!-- /metrics-grid -->
+
+        <!-- Graphical Visualizations -->
+        <div class="charts-container">
+          
+          <!-- Chart 1: Breakdown Donut -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <div class="chart-title">
+                <i data-lucide="pie-chart"></i>
+                <h3>Consumption by Campus Zone</h3>
+              </div>
+              <span class="chart-badge">Gross kWh</span>
+            </div>
+            <div class="chart-wrapper">
+              <canvas id="zoneBreakdownChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Chart 2: 12-Month Seasonal Forecast -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <div class="chart-title">
+                <i data-lucide="calendar"></i>
+                <h3>12-Month Academic & Climate Projection</h3>
+              </div>
+              <span class="chart-badge">MWh / Month</span>
+            </div>
+            <div class="chart-wrapper">
+              <canvas id="seasonalTrendChart"></canvas>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Energy Flow / Quick Breakdown Table -->
+        <div class="breakdown-card">
+          <div class="chart-header">
+            <div class="chart-title">
+              <i data-lucide="layers"></i>
+              <h3>Detailed Load & Cost Summary</h3>
+            </div>
+            <button id="downloadCsvBtn" class="pill-btn">
+              <i data-lucide="download"></i> Download CSV
+            </button>
+          </div>
+          <div class="table-responsive">
+            <table class="summary-table">
+              <thead>
+                <tr>
+                  <th>Campus Sector</th>
+                  <th>Daily (kWh)</th>
+                  <th>Monthly (kWh)</th>
+                  <th>Share (%)</th>
+                  <th>Est. Monthly Cost</th>
+                </tr>
+              </thead>
+              <tbody id="summaryTableBody">
+                <!-- Dynamically populated via JS -->
+              </tbody>
+              <tfoot id="summaryTableFoot">
+                <!-- Totals populated via JS -->
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- AI Green Campus Energy Conservation Tips -->
+        <div class="tips-card">
+          <div class="tips-header">
+            <i data-lucide="lightbulb"></i>
+            <div>
+              <h3>Campus Energy Optimization Opportunities</h3>
+              <p>Actionable recommendations based on your current campus load distribution</p>
+            </div>
+          </div>
+          <div class="tips-list" id="recommendationsList">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>VoltCampus Estimator • Engineered with standard IEEE & ASHRAE campus energy modeling benchmarks • Client-side calculation</p>
+    </footer>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
