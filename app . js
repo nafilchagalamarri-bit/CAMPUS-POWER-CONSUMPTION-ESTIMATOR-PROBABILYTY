@@ -1,0 +1,42 @@
+document.addEventListener('DOMContentLoaded', () => {
+    // Select elements
+    const classroomSlider = document.querySelector('input[type="range"]'); // Adjust selector if needed based on your HTML ids
+    const operatingHoursSlider = document.querySelectorAll('input[type="range"]')[1];
+    const acSlider = document.querySelectorAll('input[type="range"]')[2];
+
+    const dailyNetVal = document.querySelectorAll('.card-value, h3')[1]; // Daily net consumption display
+    const monthlyBillVal = document.querySelector('.card-value, h3'); // Estimated monthly bill display
+    const co2Val = document.querySelectorAll('h3')[2]; // CO2 emissions display
+
+    function calculateConsumption() {
+        // Get values from sliders (fallback to default if elements not found)
+        const classrooms = classroomSlider ? parseInt(classroomSlider.value) || 45 : 45;
+        const opHours = operatingHoursSlider ? parseFloat(operatingHoursSlider.value) || 9 : 9;
+        const acPercentage = acSlider ? parseFloat(acSlider.value) || 60 : 60;
+
+        // Basic calculation logic (You can tweak multipliers as per your project formula)
+        // Assume each classroom consumes an average baseline kWh per hour, scaled by operating hours and AC percentage
+        const avgKwPerClassroom = 2.5; 
+        const dailyConsumption = classrooms * opHours * avgKwPerClassroom * (acPercentage / 100);
+        
+        const monthlyConsumption = dailyConsumption * 30; // 30 days
+        const tariff = 0.14; // Tariff from top right header
+        const monthlyBill = monthlyConsumption * tariff;
+        
+        const co2Emissions = (monthlyConsumption * 0.00085).toFixed(1); // Standard conversion factor for tonnes of CO2
+
+        // Update DOM elements if they exist
+        if (dailyNetVal) dailyNetVal.textContent = `${Math.round(dailyConsumption)} kWh/day`;
+        if (monthlyBillVal) monthlyBillVal.textContent = `$${Math.round(monthlyBill).toLocaleString()}`;
+        if (co2Val) co2Val.textContent = `${co2Emissions} Tonnes`;
+    }
+
+    // Attach event listeners to sliders to recalculate on change
+    const sliders = document.querySelectorAll('input[type="range"]');
+    sliders.forEach(slider => {
+        slider.addEventListener('input', calculateConsumption);
+    });
+
+    // Run initial calculation on load
+    calculateConsumption();
+});
